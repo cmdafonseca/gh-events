@@ -1,8 +1,10 @@
 name: Events Demo 1
+
 on:
   push:
     branches:
       - main
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -15,11 +17,13 @@ jobs:
         run: npm run lint
       - name: Test code
         run: npm run test
+      - name: Publish js filename
+        id: publish 
+        run: echo "::set-output name=script-file::$(find dist/assets/*.js -type f)"
+
   build:
     needs: test
     runs-on: ubuntu-latest
-    outputs:
-      script-file: ${{steps.publish.script-file}}
     steps:
       - name: Get code
         uses: actions/checkout@v3
@@ -27,17 +31,13 @@ jobs:
         run: npm ci
       - name: Build website
         run: npm run build
-      - name: Publish js filename
-        id: publish 
-        run: find dist/assets/*.js -type f -execdir echo "script-file={}" >> $GITHUB_OUTPUT ";"
-      - name: Upload atifacts
+      - name: Output contents
+        run: ls dist/assets
+      - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           name: dist-files
           path: dist
-          # path: |
-          #   dist
-          #   package.json
 
   deploy:
     needs: build
